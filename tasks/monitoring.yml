@@ -1,0 +1,58 @@
+---
+- name: Make sure nrpe is installed and install plugins
+  apt: name={{item}} state=present
+  with_items:
+    - nagios-nrpe-server
+    - nagios-plugins-basic
+    - nagios-plugins-contrib
+
+- name: Install nrpe configuration for base apache
+  template:
+    src: apache2/apache2.nrpe.conf.j2
+    dest: /etc/nagios/nrpe.d/apache2.cfg
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart nrpe
+
+- name: Install monitoring vhost configuration
+  copy:
+    src: apache2-monitoring.vhost.conf
+    dest: /etc/apache2/sites-available/monitor
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload apache
+
+- name: Create monitoring site directory
+  file:
+    dest: /var/www/monitor/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Install test PHP script
+  template:
+    src: apache2/monitoring_testpage.j2
+    dest: /var/www/monitor/test.php
+    owner: root
+    group: root
+    mode: 0744
+  when: apache2_base_php_enabled
+
+- name: Install test html page
+  template:
+    src: apache2/monitoring_testpage.j2
+    dest: /var/www/monitor/test.html
+    owner: root
+    group: root
+    mode: 0744
+  when: not apache2_base_php_enabled
+
+- name: Enable monitoring site
+  file:
+    src: /etc/apache2/sites-available/monitor
+    dest: /etc/apache2/sites-enabled/monitor
+    state: link
+  notify: Reload apache

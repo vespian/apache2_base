@@ -1,0 +1,11 @@
+{% set warn_spare_workers = (apache2_base_prefork_max_clients * 0.2) | int %}
+{% set crit_spare_workers = (apache2_base_prefork_max_clients * 0.1) | int %}
+{% if apache2_base_php_enabled %}
+{% set test_url = "/test.php" %}
+{% set test_string = "DyfoolepjaurmouwebIr" %}
+{% else %}
+{% set test_url = "/test.html" %}
+{% set test_string = "JofapHavIoNanWawEak" %}
+{% endif %}
+command[check_httpd_status]=/usr/lib/nagios/plugins/check_httpd_status -H 127.0.0.1 -p 81 -t 3 -w {{ warn_spare_workers }}: -c {{ crit_spare_workers }}:
+command[check_http]=/usr/lib/nagios/plugins/check_http -H monitor -I 127.0.0.1 -p 81 -t 5 -w 3 -c 4 -s {{ test_string }} -u {{ test_url }}

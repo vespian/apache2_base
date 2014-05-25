@@ -1,0 +1,68 @@
+#Daemon related:
+User ${APACHE_RUN_USER}
+Group ${APACHE_RUN_GROUP}
+
+ServerName {{ inventory_hostname }}
+ServerRoot "/etc/apache2"
+LockFile ${APACHE_LOCK_DIR}/accept.lock
+PidFile ${APACHE_PID_FILE}
+LogLevel warn
+ErrorLog ${APACHE_LOG_DIR}/error.log
+
+<IfModule mpm_prefork_module>
+    StartServers          {{ apache2_base_prefork_start_servers }}
+    MinSpareServers       {{ apache2_base_prefork_min_spare_servers }}
+    MaxSpareServers       {{ apache2_base_prefork_max_spare_servers }}
+    MaxClients            {{ apache2_base_prefork_max_clients }}
+    MaxRequestsPerChild   {{ apache2_base_prefork_max_requests_per_child }}
+    ServerLimit           {{ apache2_base_prefork_max_clients }}
+</IfModule>
+
+# FIXME - add an option for choosing a worker model (and disabling PHP if
+#   it is not compatible)
+#<IfModule mpm_worker_module>
+#    StartServers          2
+#    MinSpareThreads      25
+#    MaxSpareThreads      75
+#    ThreadLimit          64
+#    ThreadsPerChild      25
+#    MaxClients          150
+#    MaxRequestsPerChild   0
+#</IfModule>
+
+#Connections related:
+Timeout {{ apache2_base_connection_timeout }}
+KeepAlive {{ apache2_base_keepalive }}
+{% if apache2_base_keepalive == 'On' %}
+MaxKeepAliveRequests {{ apache2_base_keepalive_max_requests }}
+KeepAliveTimeout {{ apache2_base_keepalive_timeout }}
+{% endif %}
+DefaultType None
+
+#All the rest:
+AccessFileName .htaccess
+<Files ~ "^\.ht">
+    Order allow,deny
+    Deny from all
+    Satisfy all
+</Files>
+
+#Monitoring related:
+ExtendedStatus On
+
+#Remaining config:
+Include mods-enabled/*.load
+Include mods-enabled/*.conf
+Include ports.conf
+
+HostnameLookups Off
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\" %D" vhost_combined_time
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\" %D" combined_time
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %O" common
+LogFormat "%{Referer}i -> %U" referer
+LogFormat "%{User-agent}i" agent
+
+Include conf.d/
+Include sites-enabled/

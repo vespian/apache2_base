@@ -1,0 +1,39 @@
+---
+- name: Install PHP, base modules and extra modules
+  apt:
+    pkg: "{{ item }}"
+    state: present
+  with_flattened:
+    - apache2_base_php_base_packages
+    - apache2_base_php_extra_packages
+  notify: Restart apache
+
+- name: Set php.ini
+  template:
+    src: "php/apache2.php.ini.j2"
+    dest: "/etc/php5/apache2/php.ini"
+  notify: Reload apache
+
+- name: Create PHP log directory
+  file:
+    name: /var/log/php/
+    owner: root
+    group: www-data
+    mode: 0770
+    state: directory
+
+- name: Create PHP log archive directory
+  file:
+    name: /var/log/archive/php/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Create PHP logrotate configuration
+  template:
+    src: logrotate.apache2.conf.j2
+    dest: /etc/logrotate.d/apache2
+    owner: root
+    group: root
+    mode: 0644

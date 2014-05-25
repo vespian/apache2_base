@@ -1,0 +1,10 @@
+{# workaround for libapache2-mod-rpaf bug #653330 still present in 0.6-7+wheezy1 #}
+{% for module_name in ["mod_rpaf.c", "mod_rpaf-2.0.c"] %}
+<IfModule {{ module_name }}>
+        RPAFenable On
+        RPAFsethostname On
+        RPAFheader X-Real-IP
+        RPAFproxy_ips {% for host in apache2_base_rpafproxy_ips %} {{ host }} {% endfor %}
+
+</IfModule>
+{% endfor %}

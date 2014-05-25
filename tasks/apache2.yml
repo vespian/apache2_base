@@ -1,0 +1,105 @@
+---
+- name: Install Apache2, base modules and extra modules
+  apt:
+    pkg: "{{ item }}"
+    state: present
+  with_flattened:
+    - apache2_base_base_packages
+    - apache2_base_extra_packages
+
+- name: Create log archive directories
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - /var/log/archive/
+    - /var/log/archive/apache2/
+
+- name: Remove default index.html
+  file:
+    name: /var/www/index.html
+    state: absent
+
+- name: Find Apache2 modules enabled on the host
+  shell: ls -1 /etc/apache2/mods-enabled/ | cut -d. -f 1 | sort -u
+  register: current_modules
+  always_run: yes
+  changed_when: False
+
+- name: Determine the list of configured modules (PHP enabled)
+  action: set_fact apache_modules="{{ apache2_base_base_modules + apache2_base_extra_modules + apache2_base_apache2_base_php_modules }}"
+  when: apache2_base_php_enabled == True
+
+- name: Determine the list of configured modules (PHP disabled)
+  action: set_fact apache_modules="{{ apache2_base_base_modules + apache2_base_extra_modules }}"
+  when: apache2_base_php_enabled == False
+
+- name: Print enabled modules
+  debug: var=apache_modules
+
+- name: Disable modules that currently are not in use
+  apache2_module:
+    name: "{{ item }}"
+    state: absent
+  with_items: current_modules.stdout_lines
+  when: item not in apache_modules
+  notify: Restart apache
+
+- name: Enable apache2 modules that were configured
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  with_items: apache_modules
+  when: item not in current_modules.stdout_lines
+  notify: Restart apache
+
+- name: Disable default apache site
+  file:
+    path: "/etc/apache2/sites-enabled/000-default"
+    state: absent
+  notify: Reload apache
+
+- name: Disable default-ssl apache site
+  file:
+    path: "/etc/apache2/sites-enabled/000-default-ssl"
+    state: absent
+  notify: Reload apache
+
+- name: Configure Apache ports
+  template:
+    src: apache2/ports.conf.j2
+    dest: /etc/apache2/ports.conf
+  notify: Restart apache
+
+- name: Upload apache2.conf
+  template:
+    src: apache2/apache2.conf.j2
+    dest: /etc/apache2/apache2.conf
+  notify: Restart apache
+
+- name: Tighten Apache security
+  copy:
+    src: apache2-security.conf
+    dest: /etc/apache2/conf.d/security
+    owner: root
+    group: root
+  notify: Restart apache
+
+- name: Upload mod-rpaf configuration
+  template:
+    src: apache2/rpaf.conf.wheezy.j2
+    dest: /etc/apache2/mods-available/rpaf.conf
+    mode: 0644
+    owner: root
+    group: root
+  notify: Restart apache
+  when: "'libapache2-mod-rpaf' in {{ apache2_base_extra_packages }}"
+
+- name: Enable Apache2 service
+  service:
+    name: apache2
+    enabled: yes
+    state: started
