@@ -113,8 +113,8 @@ role:
 https://github.com/EspadaV8/ansible-apache2-vhosts.git
 
 licensed under MIT license. It has been adapted and extended to match Zadane.pl's
-requirements by Pawel Rozlach during the work time and spare time and then
-opensourced by the company.
+requirements and then opensourced by the company. Currently, all the changes/
+enchancements have been made by Pawel Rozlach.
 
 Some important contributions and fixes have also been made by Rafał Trójniak
 (https://github.com/rafaltrojniak) and Jakub Kramarz (https://github.com/jkramarz).
