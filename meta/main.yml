@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: "see README.md"
-  company: Zadane.pl sp. z o.o.
+  company: Brainly.com sp. z o.o.
   description: Base role for Apache HTTPD server
   license: Apache 2.0
   min_ansible_version: 1.6
@@ -9,5 +9,8 @@ galaxy_info:
     - name: Debian
       versions:
         - wheezy
+    - name: EL
+      versions:
+        - 7
   categories:
     - web
