@@ -1,8 +1,8 @@
 ---
 - fail:
     msg: "This role supports only Debian Wheezy and Centos/RHEL 7"
-  when: ansible_os_family not in ['RedHat', 'Debian'] or \
-        ansible_distribution_major_version != '7'
+  when: "ansible_os_family not in ['RedHat', 'Debian'] or \
+        ansible_distribution_major_version != '7'"
 
 - include: "RedHat/php.yml"
   when: ansible_os_family == 'RedHat' and apache2_base_php_enabled == True
