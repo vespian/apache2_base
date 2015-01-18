@@ -1,0 +1,46 @@
+---
+- name: Create log archive directories
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - /var/log/archive/
+    - /var/log/archive/apache2/
+
+- name: Remove default logrotate file for Centos
+  file:
+    name: /etc/logrotate.d/httpd
+    state: absent
+  when: ansible_os_family == 'RedHat'
+
+- name: Create logrotate configuration
+  template:
+    src: logrotate.conf.j2
+    dest: /etc/logrotate.d/apache2
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create logging directory for apache2
+  file:
+    name: /var/log/apache2/
+    state: directory
+    owner: root
+    group: root
+    mode: 0770
+    setype: httpd_log_t
+  when: ansible_os_family == 'RedHat'
+
+- name: Fix the symlink to logs directory for Centos
+  file:
+    dest: /etc/httpd/logs
+    src: /var/log/apache2/
+    state: link
+    owner: root
+    group: root
+    seuser: system_u
+    setype: httpd_log_t
+  when: ansible_os_family == 'RedHat'

@@ -3,40 +3,52 @@
         daily
         missingok
         dateext
-        rotate 730
+        rotate 28
         compress
         delaycompress
         ifempty
         create 640 root adm
         sharedscripts
         postrotate
+{% if ansible_os_family == 'Debian' %}
                 /etc/init.d/apache2 reload > /dev/null
+{% else %}
+                /bin/systemctl reload httpd.service > /dev/null 2>/dev/null || true
+{% endif %}
         endscript
+{% if ansible_os_family == 'Debian' %}
         prerotate
                 if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
                         run-parts /etc/logrotate.d/httpd-prerotate; \
                 fi; \
         endscript
+{% endif %}
 }
+{% if apache2_base_php_enabled == True %}
 
 /var/log/php/*.log {
         olddir /var/log/archive/php/
         daily
         missingok
         dateext
-        rotate 365
+        rotate 28
         compress
         delaycompress
         ifempty
         su root root
         sharedscripts
-        postrotate
+{% if ansible_os_family == 'Debian' %}
                 /etc/init.d/apache2 reload > /dev/null
+{% else %}
+                /bin/systemctl reload httpd.service > /dev/null 2>/dev/null || true
+{% endif %}
         endscript
+{% if ansible_os_family == 'Debian' %}
         prerotate
                 if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
                         run-parts /etc/logrotate.d/httpd-prerotate; \
                 fi; \
         endscript
+{% endif %}
 }
-
+{% endif %}

@@ -18,7 +18,7 @@
   file:
     name: /var/log/php/
     owner: root
-    group: www-data
+    group: "{{ apache2_base_runas_user[ansible_os_family] }}"
     mode: 0770
     state: directory
 
@@ -29,11 +29,3 @@
     owner: root
     group: root
     mode: 0755
-
-- name: Create PHP logrotate configuration
-  template:
-    src: logrotate.apache2.conf.j2
-    dest: /etc/logrotate.d/apache2
-    owner: root
-    group: root
-    mode: 0644

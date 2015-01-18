@@ -1,5 +1,28 @@
 ---
-- include: php.yml tags=service
-  when: apache2_base_php_enabled == True
+- fail:
+    msg: "This role supports only Debian Wheezy and Centos/RHEL 7"
+  when: ansible_os_family not in ['RedHat', 'Debian'] or \
+        ansible_distribution_major_version != '7'
+
+- include: "RedHat/php.yml"
+  when: ansible_os_family == 'RedHat' and apache2_base_php_enabled == True
+  tags:
+    - service
+
+- include: "Debian/php.yml"
+  when: ansible_os_family == 'Debian' and apache2_base_php_enabled == True
+  tags:
+    - service
+
+- include: common.yml tags=service
 - include: apache2.yml tags=service
-- include: monitoring.yml tags=monitoring
+
+- include: "RedHat/monitoring.yml"
+  when: ansible_os_family == 'RedHat' and apache2_base_monitoring == True
+  tags:
+    - monitoring
+
+- include: "Debian/monitoring.yml"
+  when: ansible_os_family == 'Debian' and apache2_base_monitoring == True
+  tags:
+    - monitoring

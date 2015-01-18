@@ -1,28 +1,11 @@
 ---
-apache2_base_base_packages:
-  - apache2
-  - apache2-utils
-  - apache2-mpm-prefork
-apache2_base_extra_packages: []
-apache2_base_base_modules:
-  - alias
-  - auth_basic
-  - authn_file
-  - authz_default
-  - authz_groupfile
-  - authz_host
-  - authz_user
-  - dir
-  - env
-  - expires
-  - mime
-  - reqtimeout
-  - rewrite
-  - setenvif
-  - status
-apache2_base_extra_modules: []
-apache2_base_apache2_base_php_modules:
-  - php5
+apache2_base_extra_packages:
+  Debian: []
+  RedHat: []
+apache2_base_extra_modules:
+  Debian: []
+  RedHat: []
+
 apache2_base_host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
 apache2_base_port: 80
 apache2_base_ssl_port: 443
@@ -37,11 +20,9 @@ apache2_base_keepalive_max_requests: 100
 apache2_base_keepalive_timeout: 5
 apache2_base_rpafproxy_ips: []
 
+apache2_base_monitoring: False
+
 apache2_base_php_enabled: False
-apache2_base_php_base_packages:
-  - libapache2-mod-php5
-  - php5-common
-  - php5-cli
 apache2_base_php_extra_packages: []
 apache2_base_php_max_execution_time: 30
 apache2_base_php_post_max_size: "10M"
@@ -51,59 +32,5 @@ apache2_base_php_memory_limit: "32M"
 apache2_base_php_short_open_tag: "Off"
 apache2_base_php_open_basedir: ""
 apache2_base_php_file_uploads: "Off"
-apache2_base_php_disabled_functions:
-  - php_uname
-  - getmyuid
-  - getmypid
-  - passthru
-  - diskfreespace
-  - tmpfile
-  - link
-  - ignore_user_abord
-  - shell_exec
-  - dl
-  - set_time_limit
-  - exec
-  - system
-  - highlight_file
-  - show_source
-  - fpaththru
-  - virtual
-  - posix_ctermid
-  - posix_getcwd
-  - posix_getegid
-  - posix_geteuid
-  - posix_getgid
-  - posix_getgrgid
-  - posix_getgrnam
-  - posix_getgroups
-  - posix_getlogin
-  - posix_getpgid
-  - posix_getpgrp
-  - posix_getpid
-  - _getppid
-  - posix_getpwnam
-  - posix_getpwuid
-  - posix_getrlimit
-  - posix_getsid
-  - posix_getuid
-  - posix_isatty
-  - posix_kill
-  - posix_mkfifo
-  - posix_setegid
-  - posix_seteuid
-  - posix_setgid
-  - posix_setpgid
-  - posix_setsid
-  - posix_setuid
-  - posix_times
-  - posix_ttyname
-  - posix_uname
-  - proc_open
-  - proc_close
-  - proc_get_status
-  - proc_nice
-  - proc_terminate
-  - phpinfo
 apache2_base_php_reenabled_functions: []
 apache2_base_php_extra_disabled_functions: []

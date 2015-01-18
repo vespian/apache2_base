@@ -1,12 +1,12 @@
 ---
 - name: Restart apache
   service:
-    name: apache2
+    name: "{{ apache2_base_daemon[ansible_os_family] }}"
     state: restarted
 
 - name: Reload apache
   service:
-    name: apache2
+    name: "{{ apache2_base_daemon[ansible_os_family] }}"
     state: reloaded
 
 - name: Reload nrpe

@@ -1,105 +1,116 @@
 ---
-- name: Install Apache2, base modules and extra modules
+- name: Install Apache2, base modules and extra modules (Debian)
   apt:
     pkg: "{{ item }}"
     state: present
   with_flattened:
-    - apache2_base_base_packages
-    - apache2_base_extra_packages
+    - "{{ apache2_base_base_packages[ansible_os_family] }}"
+    - "{{ apache2_base_extra_packages[ansible_os_family] }}"
+  when: ansible_os_family == 'Debian'
 
-- name: Create log archive directories
+- name: Install Apache2, base modules and extra modules (RedHat)
+  yum:
+    pkg: "{{ item }}"
+    state: present
+  with_flattened:
+    - "{{ apache2_base_base_packages[ansible_os_family] }}"
+    - "{{ apache2_base_extra_packages[ansible_os_family] }}"
+  when: ansible_os_family == 'RedHat'
+
+- name: Remove default cruft
   file:
     name: "{{ item }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - /var/log/archive/
-    - /var/log/archive/apache2/
-
-- name: Remove default index.html
-  file:
-    name: /var/www/index.html
     state: absent
+  with_flattened:
+    - "{{ apache2_base_redundant_cruft[ansible_os_family] }}"
+  notify: Reload apache
+
+# Figure out what version of Apache is installed.
+- name: Get installed version of Apache.
+  command: "{{ apache2_base_daemon[ansible_os_family] }} -v"
+  changed_when: false
+  always_run: yes
+  register: _apache_version
+
+- name: Create apache_version variable.
+  set_fact:
+    apache_version: "{{ _apache_version.stdout.split()[2].split('/')[1] }}"
+
+- name: Print detected software version
+  debug: var=apache_version
 
 - name: Find Apache2 modules enabled on the host
-  shell: ls -1 /etc/apache2/mods-enabled/ | cut -d. -f 1 | sort -u
-  register: current_modules
+  shell: "{{ apache2_base_find_redundant_modules_cmd[ansible_os_family] }}"
+  register: _current_modules
   always_run: yes
   changed_when: False
 
 - name: Determine the list of configured modules (PHP enabled)
-  action: set_fact apache_modules="{{ apache2_base_base_modules + apache2_base_extra_modules + apache2_base_apache2_base_php_modules }}"
+  action: set_fact apache_modules="{{ apache2_base_base_modules[ansible_os_family] + apache2_base_extra_modules[ansible_os_family] + apache2_base_base_php_modules[ansible_os_family] }}"
   when: apache2_base_php_enabled == True
 
 - name: Determine the list of configured modules (PHP disabled)
-  action: set_fact apache_modules="{{ apache2_base_base_modules + apache2_base_extra_modules }}"
+  action: set_fact apache_modules="{{ apache2_base_base_modules[ansible_os_family] + apache2_base_extra_modules[ansible_os_family] }}"
   when: apache2_base_php_enabled == False
 
 - name: Print enabled modules
   debug: var=apache_modules
 
-- name: Disable modules that currently are not in use
+- name: Disable modules that currently are not in use (Debian)
   apache2_module:
     name: "{{ item }}"
     state: absent
-  with_items: current_modules.stdout_lines
-  when: item not in apache_modules
+  with_items: _current_modules.stdout_lines
+  when: ansible_os_family == 'Debian' and item not in apache_modules
   notify: Restart apache
 
-- name: Enable apache2 modules that were configured
+- name: Enable apache2 modules that were configured (Debian)
   apache2_module:
     name: "{{ item }}"
     state: present
   with_items: apache_modules
-  when: item not in current_modules.stdout_lines
+  when: ansible_os_family == 'Debian' and item not in _current_modules.stdout_lines
   notify: Restart apache
 
-- name: Disable default apache site
+- name: Remove redundant module configuration (RedHat)
   file:
-    path: "/etc/apache2/sites-enabled/000-default"
+    name: "/etc/httpd/conf.modules.d/{{ item }}"
     state: absent
-  notify: Reload apache
-
-- name: Disable default-ssl apache site
-  file:
-    path: "/etc/apache2/sites-enabled/000-default-ssl"
-    state: absent
-  notify: Reload apache
-
-- name: Configure Apache ports
-  template:
-    src: apache2/ports.conf.j2
-    dest: /etc/apache2/ports.conf
+  with_items: _current_modules.stdout_lines
+  when: ansible_os_family == 'RedHat' and item not in apache_modules
   notify: Restart apache
 
-- name: Upload apache2.conf
+- name: Provide default configuration for base modules (RedHat)
   template:
-    src: apache2/apache2.conf.j2
-    dest: /etc/apache2/apache2.conf
-  notify: Restart apache
-
-- name: Tighten Apache security
-  copy:
-    src: apache2-security.conf
-    dest: /etc/apache2/conf.d/security
-    owner: root
-    group: root
-  notify: Restart apache
-
-- name: Upload mod-rpaf configuration
-  template:
-    src: apache2/rpaf.conf.wheezy.j2
-    dest: /etc/apache2/mods-available/rpaf.conf
+    src: apache2/base_moduleconfig.RedHat.conf.j2
+    dest: /etc/httpd/conf.modules.d/00-base.conf
     mode: 0644
     owner: root
     group: root
   notify: Restart apache
-  when: "'libapache2-mod-rpaf' in {{ apache2_base_extra_packages }}"
+  when: ansible_os_family == 'RedHat'
+
+- name: Upload configuration templates
+  template:
+    src: "apache2/{{ item }}.j2"
+    dest: "{{ apache2_base_server_root[ansible_os_family] }}/{{ apache2_base_conf_files_locations[ansible_os_family][item] }}"
+    mode: 0644
+    owner: root
+    group: root
+  notify: Restart apache
+  when: item in apache2_base_conf_files_locations[ansible_os_family]
+  with_items:
+    - apache2.conf
+    - mime.conf
+    - mime_magic.conf
+
+- name: Test configuration
+  command: apachectl configtest
+  changed_when: False
+  always_run: True
 
 - name: Enable Apache2 service
   service:
-    name: apache2
+    name: "{{ apache2_base_daemon[ansible_os_family] }}"
     enabled: yes
     state: started

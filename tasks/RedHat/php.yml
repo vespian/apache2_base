@@ -1,0 +1,3 @@
+---
+- fail:
+    msg: TODO - php setup for centos is not ready yet

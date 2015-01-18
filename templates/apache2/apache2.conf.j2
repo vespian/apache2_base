@@ -1,13 +1,42 @@
 #Daemon related:
-User ${APACHE_RUN_USER}
-Group ${APACHE_RUN_GROUP}
+User {{ apache2_base_runas_user[ansible_os_family] }}
+Group {{ apache2_base_runas_user[ansible_os_family] }}
 
 ServerName {{ inventory_hostname }}
-ServerRoot "/etc/apache2"
-LockFile ${APACHE_LOCK_DIR}/accept.lock
-PidFile ${APACHE_PID_FILE}
+ServerRoot {{ apache2_base_server_root[ansible_os_family] }}
+{% if ansible_os_family == 'Debian' %}
+LockFile /var/lock/apache2/accept.lock
+PidFile /var/run/apache2.pid
+{% else %}
+{# "LockFile" was superseeded in 2.4 by 'Mutex' directive #}
+{# "PidFile" RHEL/Centos 7 has Systemd already #}
+{% endif %}
+ErrorLog /var/log/apache2/error.log
 LogLevel warn
-ErrorLog ${APACHE_LOG_DIR}/error.log
+
+# Socket configuration:
+{% if apache2_base_monitoring == True %}
+Listen 127.0.0.1:81
+{% endif %}
+
+Listen {{apache2_base_host}}:{{apache2_base_port}}
+{% if apache_version.split('.')[1] < 4 %}
+NameVirtualHost {{apache2_base_host}}:{{apache2_base_port}}
+{% endif %}
+
+<IfModule mod_ssl.c>
+    Listen {{apache2_base_host}}:{{apache2_base_ssl_port}}
+    NameVirtualHost {{apache2_base_host}}:{{apache2_base_ssl_port}}
+</IfModule>
+
+# Include modules configuration:
+{% if ansible_os_family == 'Debian' %}
+Include mods-enabled/*.load
+Include mods-enabled/*.conf
+{% else %}
+Include conf.modules.d/*.conf
+{% endif %}
+Include conf.d/
 
 <IfModule mpm_prefork_module>
     StartServers          {{ apache2_base_prefork_start_servers }}
@@ -18,18 +47,6 @@ ErrorLog ${APACHE_LOG_DIR}/error.log
     ServerLimit           {{ apache2_base_prefork_max_clients }}
 </IfModule>
 
-# FIXME - add an option for choosing a worker model (and disabling PHP if
-#   it is not compatible)
-#<IfModule mpm_worker_module>
-#    StartServers          2
-#    MinSpareThreads      25
-#    MaxSpareThreads      75
-#    ThreadLimit          64
-#    ThreadsPerChild      25
-#    MaxClients          150
-#    MaxRequestsPerChild   0
-#</IfModule>
-
 #Connections related:
 Timeout {{ apache2_base_connection_timeout }}
 KeepAlive {{ apache2_base_keepalive }}
@@ -38,23 +55,39 @@ MaxKeepAliveRequests {{ apache2_base_keepalive_max_requests }}
 KeepAliveTimeout {{ apache2_base_keepalive_timeout }}
 {% endif %}
 DefaultType None
+EnableSendfile on
 
-#All the rest:
+# Security related:
+ServerTokens Prod
+ServerSignature Off
+TraceEnable Off
+
+<Directory />
+    Options None
+    AllowOverride None
+{% if apache_version.split('.')[1] < 4 %}
+    Order Deny,Allow
+    Deny from all
+{% else %}
+    Require all denied
+{% endif %}
+</Directory>
+
 AccessFileName .htaccess
 <Files ~ "^\.ht">
+{% if apache_version.split('.')[1] < 4 %}
     Order allow,deny
     Deny from all
     Satisfy all
+{% else %}
+    Require all denied
+{% endif %}
 </Files>
 
-#Monitoring related:
+# Monitoring related:
 ExtendedStatus On
 
-#Remaining config:
-Include mods-enabled/*.load
-Include mods-enabled/*.conf
-Include ports.conf
-
+# Logging:
 HostnameLookups Off
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\" %D" vhost_combined_time
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
@@ -64,5 +97,9 @@ LogFormat "%h %l %u %t \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 
-Include conf.d/
+# Vhosts/sites:
+{% if ansible_os_family == 'Debian' %}
 Include sites-enabled/
+{% else %}
+IncludeOptional conf.d/*.con
+{% endif %}

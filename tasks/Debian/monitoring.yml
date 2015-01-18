@@ -17,7 +17,7 @@
 
 - name: Install monitoring vhost configuration
   copy:
-    src: apache2-monitoring.vhost.conf
+    src: apache2/monitoring.vhost.conf
     dest: /etc/apache2/sites-available/monitor
     owner: root
     group: root

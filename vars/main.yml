@@ -1,0 +1,141 @@
+---
+apache2_base_base_packages:
+  RedHat:
+    - httpd
+    - httpd-tools
+    - httpd-manual
+  Debian:
+    - apache2
+    - apache2-utils
+    - apache2-mpm-prefork
+
+apache2_base_daemon:
+  RedHat: httpd
+  Debian: apache2
+
+apache2_base_runas_user:
+  RedHat: apache
+  Debian: www-data
+
+apache2_base_redundant_cruft:
+  RedHat:
+    - /etc/httpd/conf.d/manual.conf
+    - /etc/httpd/conf.d/welcome.conf
+    - /etc/httpd/conf.d/README
+    - /etc/httpd/conf.d/userdir.conf
+    - /etc/httpd/conf.d/autoindex.conf
+  Debian:
+    - /var/www/index.html
+    - /etc/apache2/sites-enabled/000-default
+    - /etc/apache2/sites-enabled/000-default-ssl
+    - /etc/apache2/ports.conf
+    - /etc/apache2/conf.d/security.conf
+
+apache2_base_find_redundant_modules_cmd:
+  RedHat: ls -1 /etc/httpd/conf.modules.d | sort -u
+  Debian: ls -1 /etc/apache2/mods-enabled/ | cut -d. -f 1 | sort -u
+
+apache2_base_base_modules:
+  Debian:
+    - alias
+    - auth_basic
+    - authn_file
+    - authz_default
+    - authz_groupfile
+    - authz_host
+    - authz_user
+    - dir
+    - env
+    - expires
+    - mime
+    - reqtimeout
+    - rewrite
+    - setenvif
+    - status
+  RedHat:
+    - 00-base.conf
+    - 00-systemd.conf
+    - 00-mpm.conf
+    - 00-proxy.conf
+    - 00-mime.conf
+    - 00-mime_magic.conf
+
+apache2_base_server_root:
+  Debian: /etc/apache2/
+  RedHat: /etc/httpd/
+
+apache2_base_conf_files_locations:
+  Debian:
+    apache2.conf: apache2.conf
+  RedHat:
+    apache2.conf: conf/httpd.conf
+    mime.conf: conf.modules.d/00-mime.conf
+    mime_magic.conf: conf.modules.d/00-mime_magic.conf
+
+
+apache2_base_base_php_modules:
+  Debian:
+  - php5
+  RedHat: {}
+
+apache2_base_php_base_packages:
+  Debian:
+    - libapache2-mod-php5
+    - php5-common
+    - php5-cli
+  RedHat: {}
+
+apache2_base_php_disabled_functions:
+  - php_uname
+  - getmyuid
+  - getmypid
+  - passthru
+  - diskfreespace
+  - tmpfile
+  - link
+  - ignore_user_abord
+  - shell_exec
+  - dl
+  - set_time_limit
+  - exec
+  - system
+  - highlight_file
+  - show_source
+  - fpaththru
+  - virtual
+  - posix_ctermid
+  - posix_getcwd
+  - posix_getegid
+  - posix_geteuid
+  - posix_getgid
+  - posix_getgrgid
+  - posix_getgrnam
+  - posix_getgroups
+  - posix_getlogin
+  - posix_getpgid
+  - posix_getpgrp
+  - posix_getpid
+  - _getppid
+  - posix_getpwnam
+  - posix_getpwuid
+  - posix_getrlimit
+  - posix_getsid
+  - posix_getuid
+  - posix_isatty
+  - posix_kill
+  - posix_mkfifo
+  - posix_setegid
+  - posix_seteuid
+  - posix_setgid
+  - posix_setpgid
+  - posix_setsid
+  - posix_setuid
+  - posix_times
+  - posix_ttyname
+  - posix_uname
+  - proc_open
+  - proc_close
+  - proc_get_status
+  - proc_nice
+  - proc_terminate
+  - phpinfo
