@@ -1,21 +1,12 @@
 ---
 - name: Install Apache2, base modules and extra modules (Debian)
-  apt:
+  action:
+    module: "{{ ansible_pkg_mgr }}"
     pkg: "{{ item }}"
     state: present
   with_flattened:
     - "{{ apache2_base_base_packages[ansible_os_family] }}"
     - "{{ apache2_base_extra_packages[ansible_os_family] }}"
-  when: ansible_os_family == 'Debian'
-
-- name: Install Apache2, base modules and extra modules (RedHat)
-  yum:
-    pkg: "{{ item }}"
-    state: present
-  with_flattened:
-    - "{{ apache2_base_base_packages[ansible_os_family] }}"
-    - "{{ apache2_base_extra_packages[ansible_os_family] }}"
-  when: ansible_os_family == 'RedHat'
 
 - name: Remove default cruft
   file:
