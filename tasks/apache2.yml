@@ -95,11 +95,6 @@
     - mime.conf
     - mime_magic.conf
 
-- name: Test configuration
-  command: apachectl configtest
-  changed_when: False
-  always_run: True
-
 - name: Enable Apache2 service
   service:
     name: "{{ apache2_base_daemon[ansible_os_family] }}"

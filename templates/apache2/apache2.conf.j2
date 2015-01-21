@@ -33,10 +33,11 @@ NameVirtualHost {{apache2_base_host}}:{{apache2_base_port}}
 {% if ansible_os_family == 'Debian' %}
 Include mods-enabled/*.load
 Include mods-enabled/*.conf
+Include conf.d/
 {% else %}
 Include conf.modules.d/*.conf
+Include conf.d/*.conf
 {% endif %}
-Include conf.d/
 
 <IfModule mpm_prefork_module>
     StartServers          {{ apache2_base_prefork_start_servers }}
