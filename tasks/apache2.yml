@@ -99,4 +99,3 @@
   service:
     name: "{{ apache2_base_daemon[ansible_os_family] }}"
     enabled: yes
-    state: started
