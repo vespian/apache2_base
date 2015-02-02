@@ -14,19 +14,27 @@ PidFile /var/run/apache2.pid
 ErrorLog /var/log/apache2/error.log
 LogLevel warn
 
-# Socket configuration:
+# Monitoring socket:
 {% if apache2_base_monitoring == True %}
 Listen 127.0.0.1:81
 {% endif %}
 
-Listen {{apache2_base_host}}:{{apache2_base_port}}
+# Plain HTTP sockets:
+{% for socket in apache2_base_http_sockets %}
+Listen {{ socket.host }}:{{ socket.port }}
 {% if apache_version.split('.')[1] < 4 %}
-NameVirtualHost {{apache2_base_host}}:{{apache2_base_port}}
+NameVirtualHost {{ socket.host }}:{{ socket.port }}
 {% endif %}
+{% endfor %}
 
+# SSL sockets:
 <IfModule mod_ssl.c>
-    Listen {{apache2_base_host}}:{{apache2_base_ssl_port}}
-    NameVirtualHost {{apache2_base_host}}:{{apache2_base_ssl_port}}
+{% for socket in apache2_base_https_sockets %}
+    Listen {{ socket.host }}:{{ socket.port }} https
+{% if apache_version.split('.')[1] < 4 %}
+    NameVirtualHost {{ socket.host }}:{{ socket.port }}
+{% endif %}
+{% endfor %}
 </IfModule>
 
 # Include modules configuration:

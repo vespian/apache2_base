@@ -6,9 +6,13 @@ apache2_base_extra_modules:
   Debian: []
   RedHat: []
 
-apache2_base_host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
-apache2_base_port: 80
-apache2_base_ssl_port: 443
+apache2_base_http_sockets:
+  - host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    port: 80
+apache2_base_https_sockets:
+  - host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+    port: 443
+
 apache2_base_prefork_start_servers: 25
 apache2_base_prefork_min_spare_servers: 10
 apache2_base_prefork_max_spare_servers: 25
