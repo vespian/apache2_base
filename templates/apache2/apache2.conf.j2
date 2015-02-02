@@ -3,6 +3,7 @@ User {{ apache2_base_runas_user[ansible_os_family] }}
 Group {{ apache2_base_runas_user[ansible_os_family] }}
 
 ServerName {{ inventory_hostname }}
+DocumentRoot "/var/www/html"
 ServerRoot {{ apache2_base_server_root[ansible_os_family] }}
 {% if ansible_os_family == 'Debian' %}
 LockFile /var/lock/apache2/accept.lock
