@@ -12,8 +12,7 @@
   file:
     name: "{{ item }}"
     state: absent
-  with_flattened:
-    - "{{ apache2_base_redundant_cruft[ansible_os_family] }}"
+  with_items: "{{ apache2_base_redundant_cruft[ansible_os_family] }}"
   notify: Reload apache
 
 # Figure out what version of Apache is installed.
@@ -71,7 +70,8 @@
   when: ansible_os_family == 'RedHat' and item not in apache_modules
   notify: Restart apache
 
-- name: Provide default configuration for base modules (RedHat)
+# FIXME - I do not like it, Would be better to just put there a bunch of "if"s
+- name: Enable all sane modules (RedHat)
   template:
     src: apache2/base_moduleconfig.RedHat.conf.j2
     dest: /etc/httpd/conf.modules.d/00-base.conf
@@ -99,3 +99,6 @@
   service:
     name: "{{ apache2_base_daemon[ansible_os_family] }}"
     enabled: yes
+
+# It's functional tasks's role to start the service. Otherwise you will get
+# chicken and egg problems with configuration errors.
