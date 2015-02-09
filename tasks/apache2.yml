@@ -12,7 +12,7 @@
   file:
     name: "{{ item }}"
     state: absent
-  with_items: "{{ apache2_base_redundant_cruft[ansible_os_family] }}"
+  with_items: apache2_base_redundant_cruft[ansible_os_family]
   notify: Reload apache
 
 # Figure out what version of Apache is installed.
