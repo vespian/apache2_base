@@ -14,7 +14,6 @@
   tags:
     - service
 
-- include: common.yml tags=service
 - include: apache2.yml tags=service
 
 - include: "RedHat/monitoring.yml"
@@ -26,3 +25,5 @@
   when: ansible_os_family == 'Debian' and apache2_base_monitoring == True
   tags:
     - monitoring
+
+- include: common.yml tags=service
