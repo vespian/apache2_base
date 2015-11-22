@@ -27,3 +27,5 @@
     - monitoring
 
 - include: common.yml tags=service
+
+- meta: flush_handlers
